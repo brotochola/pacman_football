@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<!--
+	NOTES:
+	1. All tokens are represented by '$' sign in the template.
+	2. You can write your code only wherever mentioned.
+	3. All occurrences of existing tokens will be replaced by their appropriate values.
+	4. Blank lines will be removed automatically.
+	5. Remove unnecessary comments before creating your template.
+-->
+<html>
+
+<head>
+	<style>
+		video#videoTutorial {
+			width: 100%;
+			height: 100%;
+			object-fit: cover;
+		}
+
+		@font-face {
+			font-family: "Helvetica Neue";
+			src: "HelveticaNeue Medium.ttf";
+		}
+
+		.pantallas {
+			position: fixed;
+			width: 100%;
+			background: white;
+			text-align: center;
+			font-size: 26px;
+			height: 100%;
+			top: 0px;
+			margin: 0;
+			left: 0px;
+			display: none;
+
+		}
+
+		#canvasFl {
+			position: fixed !important;
+			width: 100%;
+			height: 100%;
+			top: 0px;
+			margin: 0;
+			left: 0px;
+			display: block
+		}
+
+		#joystickBase {
+			z-index: 9;
+
+		}
+
+		#joystickStick {
+			z-index: 10;
+		}
+	</style>
+	<meta charset="UTF-8">
+	<meta name="authoring-tool" content="Adobe_Animate_CC">
+	<title>pacman</title>
+	<!-- write your code here -->
+
+	<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+
+
+
+</head>
+
+<body onload="initFl()" style="margin:0px;">
+
+	<script src="virtualjoystick.js"></script>
+	<script>
+
+		let ganar = new Audio("audio/ganar.mp3");
+		let comerPasti = new Audio("audio/eating.short.mp3");
+		comerPasti.volume = 0.5;
+		let eatpill = new Audio("audio/eatpill.mp3");
+		let pierdeVida = new Audio("audio/pierde1vida.mp3");
+		let niapi = new Audio("audio/niapi.mp3");
+		let pierde = new Audio("audio/pierdeJuego.mp3");
+
+
+		let crowd = new Audio("audio/crowd.mp3");
+		let correr1 = new Audio("audio/correr1.mp3");
+		correr1.pause();
+		correr1.loop = true;
+		correr1.currentTime = 0.2;
+		correr1.volume = 0.8
+		let correr2 = new Audio("audio/correr2.mp3");
+		correr2.pause();
+		correr2.loop = true;
+		correr2.currentTime = 0.4
+		correr2.volume = 0.6
+		let correr3 = new Audio("audio/correr2.mp3");
+		correr3.pause();
+		correr3.loop = true;
+		correr3.volume = 0.6
+		correr3.currentTime = 0.3
+		let correr4 = new Audio("audio/correr2.mp3");
+		correr4.pause();
+		correr4.loop = true;
+		correr4.volume = 0.6
+
+
+
+
+
+
+
+	</script>
+
+
+
+	<canvas id="canvasFl" width="1920" height="1080" style="position: absolute;  "></canvas>
+
+	<div id="pacman">
+		<canvas id="canvasPacman" width="1920" height="1080" style="position: absolute; display: none; "></canvas>
+
+
+	</div>
+
+
+	<script src="createjs.min.js"></script>
+	<script src="dibujos_juego_pacman.js?1568055785331"></script>
+	<script src="juego_pacman.js"></script>
+
+
+
+	<script>
+		let pacmanok = false
+		let joystick = null
+		var canvas, lib, stage, exportRoot, anim_container, dom_overlay_container, fnStartAnimation;
+		function initFl() {
+			canvas = document.getElementById("canvasFl");
+			anim_container = document.getElementById("animation_container");
+			dom_overlay_container = document.getElementById("dom_overlay_container");
+			var comp = AdobeAn.getComposition("8CB78C02BE927046AB403CFFD13CAB13");
+			var lib = comp.getLibrary();
+			var loader = new createjs.LoadQueue(false);
+			loader.addEventListener("fileload", function (evt) { handleFileLoad(evt, comp) });
+			loader.addEventListener("complete", function (evt) { handleComplete(evt, comp) });
+			var lib = comp.getLibrary();
+			loader.loadManifest(lib.properties.manifest);
+		}
+		function handleFileLoad(evt, comp) {
+			var images = comp.getImages();
+			if (evt && (evt.item.type == "image")) { images[evt.item.id] = evt.result; }
+		}
+		function handleComplete(evt, comp) {
+			//This function is always called, irrespective of the content. You can use the variable "stage" after it is created in token create_stage.
+			lib = comp.getLibrary();
+			var ss = comp.getSpriteSheet();
+			var queue = evt.target;
+			var ssMetadata = lib.ssMetadata;
+			for (i = 0; i < ssMetadata.length; i++) {
+				ss[ssMetadata[i].name] = new createjs.SpriteSheet({ "images": [queue.getResult(ssMetadata[i].name)], "frames": ssMetadata[i].frames })
+			}
+
+			stage = new lib.Stage(canvas);
+			//Registers the "tick" event listener.
+
+			//	stage.addChild(exportRoot);
+			createjs.Ticker.setFPS(lib.properties.fps);
+
+			//	stage.addEventListener("tick", stage.update)
+			AdobeAn.compositionLoaded(lib.properties.id);
+
+
+			setTimeout(setupPACMAN(), 1500)
+		}
+
+		var fantasmas = []
+		var pac;
+		var comiditas = []
+		var pastis = []
+		setup2ok = false;
+		let fondo
+
+		function setupPACMAN() {
+
+
+			var el = document.getElementById("pacman");
+			PACMAN.init(el, "https://raw.githubusercontent.com/daleharvey/pacman/master/");
+			createjs.Ticker.addEventListener("tick", loopFlash)
+
+		}
+		let coef = 7
+		let FRAME_NUM = 0
+		let contenedor
+		let ui;
+
+		function setupPastis() {
+			for (let i = 0; i < posiciones.comiditas.length; i++) {
+				let a = new lib.visa()
+				comiditas.push(a)
+				contenedor.addChild(a)
+				a.gotoAndPlay(Math.floor(Math.random() * a.duration))
+				a.scaleX = a.scaleY = 0.3
+				a.x = posiciones.comiditas[i].x * coef * 10
+				a.y = posiciones.comiditas[i].y * coef * 10
+			}
+
+			for (let i = 0; i < posiciones.pastis.length; i++) {
+				let pas = new lib.postnet();
+				pastis.push(pas)
+				pas.scaleX = pas.scaleY = 0.5;
+				contenedor.addChild(pas)
+				pas.x = posiciones.pastis[i].x * coef * 10
+				pas.y = posiciones.pastis[i].y * coef * 10
+			}
+
+		}
+		function setup2() {
+			contenedor = new createjs.Container();
+			ui = new lib.ui();
+			contenedor.mouseChildren = false;
+
+			contenedor.scaleX = contenedor.scaleY = 2;
+
+
+
+			console.log(posiciones)
+
+
+			fondo = new lib.fondo()
+			fondo.x = -950
+			fondo.y = -80
+			fondo.scaleX = fondo.scaleY = 1.58
+			contenedor.addChild(fondo);
+
+
+			setupPastis();
+
+
+			for (let i = 0; i < 3; i++) {
+				fantasmas.push(new lib.enemigo())
+				contenedor.addChild(fantasmas[fantasmas.length - 1])
+			}
+
+			pac = new lib.jugador()
+			contenedor.addChild(pac)
+			contenedor.setChildIndex(pac, 3)
+
+
+
+
+			stage.addChild(contenedor)
+
+			ui.x = 230;
+			ui.y = 840;
+
+			stage.addChild(ui);
+
+			setup2ok = true;
+
+			copiaPosiciones = JSON.parse(JSON.stringify(posiciones))
+		}
+
+		let copiaPosiciones;
+
+		function verRotacion(q, obj) {
+
+
+			let rot;
+			let difX = q.x - obj.x * coef;
+			let difY = q.y - obj.y * coef;
+
+			if (q == pac) {
+				if (difX != 0 || difY != 0) {
+					if (correr1.paused == true) correr1.play();
+				} else {
+					if (correr1.paused == false) correr1.pause();
+				}
+
+			} else if (q == fantasmas[0]) {
+
+				if (difX != 0 || difY != 0) {
+					if (correr2.paused == true) correr2.play();
+				} else {
+					if (correr2.paused == false) correr2.pause();
+				}
+
+			} else if (q == fantasmas[1]) {
+
+				if (difX != 0 || difY != 0) {
+					if (correr4.paused == true) correr2.play();
+				} else {
+					if (correr4.paused == false) correr2.pause();
+				}
+
+			} else if (q == fantasmas[2]) {
+
+				if (difX != 0 || difY != 0) {
+					if (correr3.paused == true) correr2.play();
+
+				} else {
+					if (correr3.paused == false) correr2.pause();
+				}
+
+
+			}
+
+
+
+			if (difX > 0) {
+				rot = 270;
+			} else if (difX < 0) {
+				rot = 90;
+
+			}
+
+			if (difY > 0) {
+				rot = 0;
+			} else if (difY < 0) {
+				rot = 180;
+				//abajo
+
+			}
+
+
+			try {
+
+				q.x = obj.x * coef
+				q.y = obj.y * coef
+				if (difY > 0 || difY < 0 || difX > 0 || difX < 0) {
+					//	pac.play();
+					q.rotation = rot;
+				} else if (difX == 0 && difY == 0) {
+					//pac.gotoAndStop(0);
+				}
+			} catch (e) { }
+		}
+
+
+		function distancia(obj1, obj2) {
+			let dx = obj1.x - obj2.x;
+			let dy = obj1.y - obj2.y;
+			return Math.floor(Math.sqrt(dx * dx + dy * dy));
+		}
+		function loopFlash() {
+			if (pausa) {
+				//console.log("loopfl")
+				return
+			}
+
+
+
+			//console.log(posiciones.juego.vidas);
+
+			if (pacmanok == false) return
+
+			FRAME_NUM++
+
+			if (FRAME_NUM == 2) setup2()
+			if (setup2ok == false) return;
+
+			if (joystick != null) {
+				if (joystick.right()) {
+					usuario.paraDer()
+					//cube.position.x = cube.position.x + 60 * frameTime;
+				}
+				if (joystick.left()) {
+					usuario.paraIzq()
+					//cube.position.x = cube.position.x - 60 * frameTime;
+				}
+				if (joystick.up()) {
+					usuario.paraArriba()
+					//cube.position.y = cube.position.y + 60 * frameTime;
+				}
+				if (joystick.down()) {
+					usuario.paraAbajo()
+					//	cube.position.y = cube.position.y - 60 * frameTime;
+				}
+			}//joystick
+
+
+			verRotacion(pac, posiciones.pacman)
+
+
+
+			//camara siguiendo a pac:
+			contenedor.y = -pac.y * 2 + canvas.height / 2;
+			contenedor.x = -pac.x * 2 + canvas.width / 2;
+			if (contenedor.y < -2150) contenedor.y = -2150
+
+
+			for (i = 0; i < fantasmas.length; i++) {
+				//	fantasmas[i].x=i*20
+				//	fantasmas[i].y=i*30
+				try { verRotacion(fantasmas[i], posiciones.fantasmas[i].new) } catch (e) { /*console.error("no habia array e fantasmas")*/ }
+
+			}
+
+
+
+
+
+
+
+
+			for (let i = 0; i < comiditas.length; i++) {
+				if (Math.abs(comiditas[i].x - pac.x) < 30 && Math.abs(comiditas[i].y - pac.y) < 30) {
+					contenedor.removeChild(comiditas[i]);
+					comiditas.splice(i, 1)
+					eatpill.play()
+					break
+				}
+			}
+
+			for (let i = 0; i < pastis.length; i++) {
+
+				if (Math.abs(pastis[i].x - pac.x) < 30 && Math.abs(pastis[i].y - pac.y) < 30) {
+					contenedor.removeChild(pastis[i]);
+					pastis.splice(i, 1)
+					comerPasti.play()
+					break
+				}
+			}
+
+
+			ponerValoresEnUI();
+
+
+
+
+
+			stage.update();
+		}
+
+
+
+		function ponerValoresEnUI() {
+			if (!ui.hasOwnProperty("vidas")) return;
+
+			if (posiciones.juego.vidas == 3) {
+				ui.vidas.vidas0.visible = false;
+				ui.vidas.vidas1.visible = false;
+				ui.vidas.vidas2.visible = false;
+				ui.vidas.vidas3.visible = true;
+			} else if (posiciones.juego.vidas == 2) {
+				ui.vidas.vidas0.visible = false;
+				ui.vidas.vidas1.visible = false;
+				ui.vidas.vidas2.visible = true;
+				ui.vidas.vidas3.visible = false;
+
+			}
+			else if (posiciones.juego.vidas == 1) {
+				ui.vidas.vidas0.visible = false;
+				ui.vidas.vidas1.visible = true;
+				ui.vidas.vidas2.visible = false;
+				ui.vidas.vidas3.visible = false;
+
+			} else if (posiciones.juego.vidas == 0) {
+				ui.vidas.vidas0.visible = true;
+				ui.vidas.vidas1.visible = false;
+				ui.vidas.vidas2.visible = false;
+				ui.vidas.vidas3.visible = false;
+
+			}
+
+
+			ui.segundos.text = Math.floor((posiciones.juego.tiempoTranscurrido / 1000))
+			ui.puntos.text = posiciones.juego.puntos
+			ui.nivel.text = nivel
+
+		}
+		function sacarPerdisteUnaVida() {
+			console.log(1)
+			joystick = new VirtualJoystick({
+				container: document.getElementById("contJoystick"),
+				mouseSupport: true,
+				stationaryBase: false,
+				baseX: 500,
+				baseY: 200
+			});
+			pausa = false;
+			$(".pantallas").hide()
+			console.log("vidas: " + posiciones.juego.vidas)
+		}
+		function perdisteUnaVida() {
+			niapi.play();
+
+
+			if (joystick != null) joystick.destroy();
+			joystick = null;
+
+			console.log("perdiste una vida")
+			pac.corriendo.visible = false;
+			pac.removeChild(pac.muerte);
+			//pac.muerte.visible=true;
+			//pac.muerte.gotoAndPlay(0)
+			pac.muerte = new lib.muelte();
+			pac.addChild(pac.muerte);
+			setTimeout(() => {
+				if (posiciones.juego.vidas <= 1) {
+
+					$(".pantallas").hide()
+					$("#perdisteDelTodo").show()
+					pierde.play();
+					crowd.pause();
+				} else {
+					pierdeVida.play();
+					$(".pantallas").hide()
+					$("#perdisteUnaVida").show()
+					setTimeout(sacarPerdisteUnaVida, 3000);
+				}
+				console.log("vidas: " + posiciones.juego.vidas)
+				pausa = true;
+			}, 1500);
+
+
+		}
+
+		function empiezaNivel() {
+			console.log("epmieza nivel")
+
+			pac.corriendo.visible = true;
+			if (pac.hasOwnProperty("muerte")) pac.muerte.visible = false;
+			pac.removeChild(pac.muerte);
+
+
+			console.log("vidas: " + posiciones.juego.vidas)
+
+		}
+
+		function sacarTutorialYEmpezar() {
+
+
+			$(".pantallas").hide();
+			pausa = false;
+			joystick = new VirtualJoystick({
+				container: document.getElementById("contJoystick"),
+				mouseSupport: true,
+				stationaryBase: false,
+				baseX: 500,
+				baseY: 200
+			});
+
+			crowd.loop = true;
+			crowd.play();
+
+			console.log("vidas: " + posiciones.juego.vidas)
+		}
+
+		function elJuegoYaCargo() {
+			pausa = true;
+			$(".pantallas").hide()
+			$("#tutorial").show();
+			setTimeout(sacarTutorialYEmpezar, 7000);
+		}
+
+		function ganasteNivel() {
+
+			ganar.play()
+			if (joystick != null) joystick.destroy();
+			joystick = null;
+	
+			if (nivel == 3) {
+				console.log("GANASTE TODO");
+				$(".pantallas").hide();
+				pausa = true;
+
+			} else {
+				setTimeout(() => {
+					pausa = true;
+				}, 1000);
+
+				$(".pantallas").hide();
+				$("#ganaste").show()
+
+				setTimeout(sacarTutorialYEmpezar, 4000);
+				console.log("vidas: " + posiciones.juego.vidas)
+			}
+		}
+
+	</script>
+	<div id="loading" style="display:block" class="pantallas" onclick="sacarTutorialYEmpezar();">loading</div>
+
+	<div id="tutorial" class="pantallas" onclick="sacarTutorialYEmpezar();">
+		<video src="tuto.mp4" id="videoTutorial" autoplay muted></video>
+	</div>
+	<div id="perdisteUnaVida" class="pantallas" onclick="sacarPerdisteUnaVida();">perdiste una vida</div>
+	<div id="perdisteDelTodo" class="pantallas"> perdiste del todo</div>
+	<div id="ganaste" class="pantallas" onclick="sacarTutorialYEmpezar()"> ganaste </div>
+</body>
+
+</html>
